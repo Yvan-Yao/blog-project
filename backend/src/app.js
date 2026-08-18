@@ -195,11 +195,11 @@ app.use('*', (req, res) => {
 async function startServer() {
   await initDatabase();
   return new Promise((resolve) => {
-    const server = app.listen(PORT, '127.0.0.1', () => {
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`\n🚀 博客 API 服务已启动`);
-      console.log(`   地址: http://127.0.0.1:${PORT}（仅本地监听，局域网不可直连）`);
-      console.log(`   API:  http://127.0.0.1:${PORT}/api`);
-      if (isDev) console.log(`   文档: http://127.0.0.1:${PORT}/api-docs`);
+      console.log(`   地址: http://0.0.0.0:${PORT}`);
+      console.log(`   API:  http://0.0.0.0:${PORT}/api`);
+      if (isDev) console.log(`   文档: http://0.0.0.0:${PORT}/api-docs`);
       console.log(`   环境: ${process.env.NODE_ENV || 'development'}\n`);
       resolve(server);
     });

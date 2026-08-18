@@ -16,10 +16,15 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    host: '127.0.0.1',        // 仅本地监听，局域网不可直接访问
+    host: '0.0.0.0',        // Cloud Studio 等云端环境需监听所有接口才能被外部访问
     // 代理 API 请求到后端，避免跨域问题
     proxy: {
       '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+      // 上传文件(头像/评论图)同样转发到后端静态目录
+      '/uploads': {
         target: 'http://localhost:3001',
         changeOrigin: true,
       },
