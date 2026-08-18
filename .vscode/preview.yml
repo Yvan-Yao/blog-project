@@ -1,0 +1,17 @@
+# Cloud Studio 预览配置文件
+# 定义项目启动命令与预览端口(见 https://cloud.tencent.com/document/product/1039/119340)
+
+apps:
+  - port: 5173
+    run: npm run dev
+    root: ./frontend
+    name: 博客前端
+    mainPort: true
+    autoOpen: true
+    autoPreview: true
+
+  - port: 3001
+    run: npm run dev
+    root: ./backend
+    name: 博客后端
+    autoOpen: true
