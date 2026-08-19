@@ -17,6 +17,7 @@ export default defineConfig({
   server: {
     port: 5173,
     host: '0.0.0.0',        // Cloud Studio 等云端环境需监听所有接口才能被外部访问
+    allowedHosts: true,    // 允许 Cloud Studio 预览域名(<port>.app.cloudstudio.work)等外部 host 访问 dev server
     // 代理 API 请求到后端，避免跨域问题
     proxy: {
       '/api': {
