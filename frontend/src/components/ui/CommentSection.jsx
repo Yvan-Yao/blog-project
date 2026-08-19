@@ -444,7 +444,8 @@ export default function CommentSection({ postId }) {
   const [replyTarget, setReplyTarget] = useState(null)
   const { t, lang } = useTranslation()
   const dateLocale = lang === 'zh' ? zhCN : enUS
-  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+  // 部署时后端同源托管前端，缺省用相对路径（''），避免写死 localhost 导致评论图片裂图
+  const apiBase = import.meta.env.VITE_API_URL || ''
 
   const { data, isLoading } = useQuery({
     queryKey: ['comments', postId],

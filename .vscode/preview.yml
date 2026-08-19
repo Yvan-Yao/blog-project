@@ -1,17 +1,17 @@
 # Cloud Studio 预览配置文件
 # 定义项目启动命令与预览端口(见 https://cloud.tencent.com/document/product/1039/119340)
+#
+# 部署采用「前后端一体」模式：
+#   1) 先构建前端(frontend/dist)
+#   2) 后端在 3001 端口同时托管页面与 /api、/uploads
+# 这样首屏只需加载少量打包文件，远比 Vite dev server 经公网隧道快。
+# 单端口即可访问，无需再开 5173。
 
 apps:
-  - port: 5173
-    run: npm run dev
-    root: ./frontend
-    name: 博客前端
+  - port: 3001
+    run: cd ../frontend && npm run build && cd ../backend && npm run dev
+    root: ./backend
+    name: 博客(前后端一体)
     mainPort: true
     autoOpen: true
     autoPreview: true
-
-  - port: 3001
-    run: npm run dev
-    root: ./backend
-    name: 博客后端
-    autoOpen: true

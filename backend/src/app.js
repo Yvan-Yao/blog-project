@@ -14,6 +14,7 @@ import rateLimit from 'express-rate-limit';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { initDatabase } from './models/database.js';
@@ -165,6 +166,25 @@ if (isDev) {
 //  挂载 API 路由
 // ─────────────────────────────────────────────
 app.use('/api', apiRoutes);
+
+// ─────────────────────────────────────────────
+//  部署: 托管前端构建产物（若存在 frontend/dist）
+//  - 生产/云端部署时由后端在同一端口(3001)同时提供页面与接口，
+//    避免 Vite dev server 在公网隧道下首屏加载数百个模块导致极慢。
+//  - dev 环境若未构建 frontend/dist 则自动跳过，不影响本地开发。
+//  - 页面与 /api、/uploads 同源，无需代理/CORS。
+// ─────────────────────────────────────────────
+const frontendDist = path.join(PROJECT_ROOT, '..', 'frontend', 'dist');
+if (fs.existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
+  // SPA 回退：非 /api、非 /uploads 的 GET 请求返回 index.html
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
+      return res.sendFile(path.join(frontendDist, 'index.html'));
+    }
+    next();
+  });
+}
 
 // ─────────────────────────────────────────────
 //  全局错误处理
