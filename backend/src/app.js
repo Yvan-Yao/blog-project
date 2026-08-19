@@ -15,6 +15,7 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import path from 'path';
 import fs from 'fs';
+import zlib from 'zlib';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { initDatabase } from './models/database.js';
@@ -45,6 +46,51 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
+// ─────────────────────────────────────────────
+//  gzip 压缩(纯 Node 内置 zlib,无需额外依赖)
+//  - 云端经公网隧道访问时,JS/CSS/JSON/HTML 体积可降 3~4 倍,显著提速
+//  - 仅对文本类资源压缩;已压缩的二进制(图片/字体)自动跳过
+//  - 客户端不支持 gzip(无 Accept-Encoding)时自动透传
+// ─────────────────────────────────────────────
+app.use((req, res, next) => {
+  if (!/\bgzip\b/.test(req.headers['accept-encoding'] || '')) return next();
+  if (res.getHeader('Content-Encoding')) return next();
+
+  const origWrite = res.write.bind(res);
+  const origEnd = res.end.bind(res);
+  let gzip = null;
+  let decided = false;
+
+  const maybeInit = () => {
+    if (decided) return;
+    decided = true;
+    const type = String(res.getHeader('Content-Type') || '');
+    const compressible = /\b(text\/|application\/(javascript|json|xml)|image\/svg\+xml|\+json|\+xml)/i.test(type);
+    if (!compressible) { gzip = false; return; }
+    gzip = zlib.createGzip();
+    res.setHeader('Content-Encoding', 'gzip');
+    res.removeHeader('Content-Length');
+    res.setHeader('Vary', 'Accept-Encoding');
+    gzip.on('data', (c) => origWrite.call(res, c));
+    gzip.on('end', () => origEnd.call(res));
+  };
+
+  res.write = function (chunk, ...rest) {
+    maybeInit();
+    if (gzip === false) return origWrite.call(res, chunk, ...rest);
+    if (chunk) gzip.write(chunk);
+    return true;
+  };
+  res.end = function (chunk, ...rest) {
+    maybeInit();
+    if (gzip === false) return origEnd.call(res, chunk, ...rest);
+    if (chunk) gzip.write(chunk);
+    gzip.end();
+    return res;
+  };
+  next();
+});
 
 // ─────────────────────────────────────────────
 //  请求解析和日志
@@ -176,10 +222,18 @@ app.use('/api', apiRoutes);
 // ─────────────────────────────────────────────
 const frontendDist = path.join(PROJECT_ROOT, '..', 'frontend', 'dist');
 if (fs.existsSync(frontendDist)) {
-  app.use(express.static(frontendDist));
+  // Vite 产物文件名带 content hash,可安全长期缓存,刷新不再重复下载
+  app.use(express.static(frontendDist, {
+    setHeaders: (res, filePath) => {
+      if (/[/\\]assets[/\\]/.test(filePath) || /index-.*\.(js|css)$/.test(filePath)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    },
+  }));
   // SPA 回退：非 /api、非 /uploads 的 GET 请求返回 index.html
   app.use((req, res, next) => {
     if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
+      res.setHeader('Cache-Control', 'no-cache');   // HTML 不缓存,保证发版即时生效
       return res.sendFile(path.join(frontendDist, 'index.html'));
     }
     next();
