@@ -84,11 +84,18 @@ export default {
         'hover': '0 4px 20px -2px rgba(0,0,0,0.12), 0 2px 8px -1px rgba(0,0,0,0.07)',
       },
 
-      // 字体
+      // 字体(系统字体栈,不依赖外部 CDN,渲染更快、国内/弱网更稳)
       fontFamily: {
-        sans: ['"Noto Sans SC"', '"PingFang SC"', '"Microsoft YaHei"', 'sans-serif'],
-        serif: ['"Noto Serif SC"', 'Georgia', 'serif'],
-        mono: ['"JetBrains Mono"', 'Consolas', 'monospace'],
+        sans: [
+          '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"',
+          '"PingFang SC"', '"Hiragino Sans GB"', '"Microsoft YaHei"',
+          '"Noto Sans SC"', 'sans-serif',
+        ],
+        serif: [
+          'Georgia', '"Times New Roman"',
+          '"Songti SC"', '"SimSun"', '"Noto Serif SC"', 'serif',
+        ],
+        mono: ['"JetBrains Mono"', 'Consolas', 'Monaco', 'monospace'],
       },
 
       // 动画
