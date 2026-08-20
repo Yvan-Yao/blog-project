@@ -22,7 +22,7 @@
  *  /admin/points     积分管理
  */
 
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import useAuthStore from '@/store/authStore'
@@ -34,30 +34,31 @@ import ThemeProvider from '@/contexts/ThemeContext'
 import Layout from '@/components/layout/Layout'
 import AdminLayout from '@/components/layout/AdminLayout'
 
-// 页面组件
-import HomePage from '@/pages/HomePage'
-import PostDetailPage from '@/pages/PostDetailPage'
-import LoginPage from '@/pages/LoginPage'
-import RegisterPage from '@/pages/RegisterPage'
-import WritePage from '@/pages/WritePage'
-import AdminDashboardPage from '@/pages/admin/AdminDashboardPage'
-import AdminPostsPage from '@/pages/admin/AdminPostsPage'
-import AdminUsersPage from '@/pages/admin/AdminUsersPage'
-import AdminCommentsPage from '@/pages/admin/AdminCommentsPage'
-import AdminCategoriesPage from '@/pages/admin/AdminCategoriesPage'
-import AdminPointsPage from '@/pages/admin/AdminPointsPage'
-import MyPostsPage from '@/pages/MyPostsPage'
-import BookmarksPage from '@/pages/BookmarksPage'
-import ChangePasswordPage from '@/pages/ChangePasswordPage'
-import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
-import ResetPasswordPage from '@/pages/ResetPasswordPage'
-import FriendsPage from '@/pages/FriendsPage'
-import FriendRequestsPage from '@/pages/FriendRequestsPage'
-import ProfilePage from '@/pages/ProfilePage'
-import PublicProfilePage from '@/pages/PublicProfilePage'
-import PointsPage from '@/pages/PointsPage'
-import LeaderboardPage from '@/pages/LeaderboardPage'
-import NotFoundPage from '@/pages/NotFoundPage'
+// 页面组件(按需懒加载:把整站大包拆成按路由分片,首屏只加载当前页所需代码,
+// 大幅降低 FCP/LCP/Speed Index —— Lighthouse 提示可省约 2.9MB 未使用 JS)
+const HomePage = lazy(() => import('@/pages/HomePage'))
+const PostDetailPage = lazy(() => import('@/pages/PostDetailPage'))
+const LoginPage = lazy(() => import('@/pages/LoginPage'))
+const RegisterPage = lazy(() => import('@/pages/RegisterPage'))
+const WritePage = lazy(() => import('@/pages/WritePage'))
+const AdminDashboardPage = lazy(() => import('@/pages/admin/AdminDashboardPage'))
+const AdminPostsPage = lazy(() => import('@/pages/admin/AdminPostsPage'))
+const AdminUsersPage = lazy(() => import('@/pages/admin/AdminUsersPage'))
+const AdminCommentsPage = lazy(() => import('@/pages/admin/AdminCommentsPage'))
+const AdminCategoriesPage = lazy(() => import('@/pages/admin/AdminCategoriesPage'))
+const AdminPointsPage = lazy(() => import('@/pages/admin/AdminPointsPage'))
+const MyPostsPage = lazy(() => import('@/pages/MyPostsPage'))
+const BookmarksPage = lazy(() => import('@/pages/BookmarksPage'))
+const ChangePasswordPage = lazy(() => import('@/pages/ChangePasswordPage'))
+const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'))
+const FriendsPage = lazy(() => import('@/pages/FriendsPage'))
+const FriendRequestsPage = lazy(() => import('@/pages/FriendRequestsPage'))
+const ProfilePage = lazy(() => import('@/pages/ProfilePage'))
+const PublicProfilePage = lazy(() => import('@/pages/PublicProfilePage'))
+const PointsPage = lazy(() => import('@/pages/PointsPage'))
+const LeaderboardPage = lazy(() => import('@/pages/LeaderboardPage'))
+const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 
 /**
  * 动态更新页面标题（根据当前语言）
@@ -140,6 +141,13 @@ export default function App() {
     <ThemeProvider>
     <LanguageProvider>
       <TitleManager />
+      <Suspense
+        fallback={
+          <div className="flex justify-center items-center min-h-screen">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-400 border-t-transparent" />
+          </div>
+        }
+      >
       <Routes>
         {/* 公开路由（带主布局） */}
         <Route element={<Layout />}>
@@ -198,6 +206,7 @@ export default function App() {
           <Route path="points" element={<AdminPointsPage />} />
         </Route>
       </Routes>
+      </Suspense>
     </LanguageProvider>
     </ThemeProvider>
   )
